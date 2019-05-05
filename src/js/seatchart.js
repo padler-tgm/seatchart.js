@@ -766,7 +766,7 @@ function SeatchartJS(seatMap, seatTypes) { // eslint-disable-line no-unused-vars
                 scItemsContainer.appendChild(scItem);
             }
 
-            if (emit && self.onAddedSeat !== null) {
+            if (emit && self.onAddedSeat !== null) { 
                 self.onAddedSeat(current, previous);
             }
         } else if (action === 'update') {
