@@ -608,6 +608,9 @@ function SeatchartJS(seatMap, seatTypes) { // eslint-disable-line no-unused-vars
         var seat = document.getElementById(id);
         seat.style.cssText = '';
         seat.className = 'seatChart-seat available';
+        if(seat.children.length > 0) {
+          seat.removeChild(seat.childNodes[0]);
+        }
     };
 
     /**
@@ -856,6 +859,16 @@ function SeatchartJS(seatMap, seatTypes) { // eslint-disable-line no-unused-vars
 
                         this.style.backgroundColor = '';
                         this.classList.add(newClass);
+                        if(currentClass == 'available') {
+                          var icon = document.createElement("img");
+                          var att = document.createAttribute("src");
+                          att.value = "/assets/seatchartjs/icons/user.svg";
+                          icon.setAttributeNode(att);
+                          this.append(icon);
+                        }else if(currentClass != 'available' && newClass == 'available'){
+                          this.removeChild(this.childNodes[0]);
+                          this.className = 'seatChart-seat available';
+                        }
 
                         // if the class isn't available then apply the background-color in the config
                         if (newClass !== 'available') {
@@ -964,7 +977,7 @@ function SeatchartJS(seatMap, seatTypes) { // eslint-disable-line no-unused-vars
      */
     var createSeat = function createSeat(type, content, seatId) {
         var seat = document.createElement('div');
-        seat.textContent = content;
+        if(type == "index") seat.textContent = content;
         seat.className = 'seatChart-seat ' + type;
 
         // if seatId wasn't passed as argument then don't set it
@@ -1073,7 +1086,6 @@ function SeatchartJS(seatMap, seatTypes) { // eslint-disable-line no-unused-vars
     var setSeat = function setSeat(type) {
         if (seatMap[type] !== undefined) {
             var cols = seatMap.cols;
-
             for (var i = 0; i < seatMap[type].length; i += 1) {
                 var index = seatMap[type][i];
                 var id = '{0}_{1}'.format(Math.floor(index / cols), index % cols);
@@ -1087,6 +1099,12 @@ function SeatchartJS(seatMap, seatTypes) { // eslint-disable-line no-unused-vars
                         seat.classList.add('blank');
                     } else if (type === 'reserved') {
                         seat.classList.add('unavailable');
+                        var icon = document.createElement("img");
+                        var att = document.createAttribute("src");
+                        att.value = "/assets/seatchartjs/icons/user.svg";
+                        icon.setAttributeNode(att);
+                        seat.append(icon);
+                        seat.style.backgroundColor = "unset";
                     }
                 }
             }
