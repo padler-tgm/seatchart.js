@@ -101,13 +101,13 @@ function SeatchartJS(seatMap, seatTypes) { // eslint-disable-line no-unused-vars
     } else if (!{}.hasOwnProperty.call(seatMap, 'rows') || !{}.hasOwnProperty.call(seatMap, 'cols')) {
         throw new Error("Invalid parameter 'seatMap' supplied to SeatchartJS. " +
                         "'row' and 'cols' properties cannot be undefined.");
-    } else if (seatMap.rows > 25 || seatMap.cols > 25) {
+    } /*else if (seatMap.rows > 25 || seatMap.cols > 25) {
         throw new Error("Invalid parameter 'seatMap' supplied to SeatchartJS. " +
                         "'row' and 'cols' properties cannot be integers greater than 25.");
     } else if (seatMap.rows < 2 || seatMap.cols < 2) {
         throw new Error("Invalid parameter 'seatMap' supplied to SeatchartJS. " +
                         "'row' and 'cols' properties cannot be integers smaller than 2.");
-    }
+    }*/
 
     // check seatTypes parameter
     if (seatTypes === undefined) {
@@ -594,9 +594,6 @@ function SeatchartJS(seatMap, seatTypes) { // eslint-disable-line no-unused-vars
                 }
             }
         }
-
-        throw new Error("Invalid parameter 'id' supplied to SeatchartJS.getSeatType(). " +
-                        "'id' is not defined in shoppingCartDict.");
     };
 
     /**
@@ -606,10 +603,12 @@ function SeatchartJS(seatMap, seatTypes) { // eslint-disable-line no-unused-vars
      */
     var releaseSeat = function releaseSeat(id) {
         var seat = document.getElementById(id);
-        seat.style.cssText = '';
-        seat.className = 'seatChart-seat available';
-        if(seat.children.length > 0) {
-          seat.removeChild(seat.childNodes[0]);
+        if(seat != null) {
+          seat.style.cssText = '';
+          seat.className = 'seatChart-seat available';
+          if (seat.children.length > 0) {
+            seat.removeChild(seat.childNodes[0]);
+          }
         }
     };
 
@@ -662,6 +661,20 @@ function SeatchartJS(seatMap, seatTypes) { // eslint-disable-line no-unused-vars
 
         var id = parentId.split('-')[1];
         var type = getSeatType(id);
+        if(type == undefined){
+          var x = id.split("_");
+          var row = parseInt(x[0], 10);
+          var col = parseInt(x[1], 10);
+          for (var i = 0; i < seatTypes.length; i += 1) {
+            var seatType = seatTypes[i];
+            for(var j = 0; j<seatType.selected.length; j++){
+              if(row*seatMap.mapcols+col == seatType.selected[j]){
+                  seatTypes[i].selected.splice(j, 1);
+                  break;
+              }
+            }
+          }
+        }
 
         releaseSeat(id);
         removeFromScDict(id);
@@ -879,7 +892,9 @@ function SeatchartJS(seatMap, seatTypes) { // eslint-disable-line no-unused-vars
                         col = parseInt(col,10);
                         for(var x = 0; x<seatTypes.length; x++){
                           var ele = seatTypes[x].selected.indexOf(row*seatMap.cols+col);
-                          if(ele != -1)seatTypes[x].selected.splice(ele, 1);
+                          if(ele != -1){
+                            seatTypes[x].selected.splice(ele, 1);
+                          }
                         }
                         // if the class isn't available then apply the background-color in the config
                         if (newClass !== 'available') {
@@ -889,7 +904,7 @@ function SeatchartJS(seatMap, seatTypes) { // eslint-disable-line no-unused-vars
                             }
                             this.classList.add('clicked');
                             this.style.backgroundColor = seatTypes[index].color;
-                            seatTypes[index].selected.push(row*seatMap.cols+col);
+                            seatTypes[index].selected.push(row*seatMap.mapcols+col);
                         } else {
                           // otherwise remove the class 'clicked'
                           // since available has it's own style
@@ -1058,7 +1073,7 @@ function SeatchartJS(seatMap, seatTypes) { // eslint-disable-line no-unused-vars
     var createColumnsIndex = function createColumnsIndex() {
         var columnsIndex = createRow();
 
-        for (var i = 1; i <= seatMap.cols; i += 1) {
+        for (var i = seatMap.startcol+1; i <= seatMap.cols; i += 1) {
             columnsIndex.appendChild(createSeat('index', i));
         }
 
@@ -1153,7 +1168,7 @@ function SeatchartJS(seatMap, seatTypes) { // eslint-disable-line no-unused-vars
      * Selects seats given with seat types.
      * @private
      */
-    var preselectSeats = function preselectSeats() {
+    var preselectSeats = function preselectSeats(flag) {
         for (var n = 0; n < seatTypes.length; n += 1) {
             var seatType = seatTypes[n];
             if ({}.hasOwnProperty.call(seatType, 'selected') && seatType.selected) {
@@ -1163,12 +1178,12 @@ function SeatchartJS(seatMap, seatTypes) { // eslint-disable-line no-unused-vars
                 for (var l = 0; l < seatType.selected.length; l += 1) {
                     var index = seatType.selected[l];
                     var row = Math.floor(index / seatMap.cols);
-                    if(row >= seatMap.rows){
+                    if(row >= seatMap.rows && flag){
                       seatType.selected.splice(l,1);
                       l--;
                     }
-                    var id = '{0}_{1}'.format(Math.floor(index / seatMap.cols), index % seatMap.cols);
-
+                    var id = '{0}_{1}'.format(Math.floor(index / seatMap.mapcols), index % seatMap.mapcols);
+                    console.log(id);
                     var element = document.getElementById(id);
                     if (element) {
                         // set background
@@ -1526,7 +1541,7 @@ function SeatchartJS(seatMap, seatTypes) { // eslint-disable-line no-unused-vars
      * Creates the seatmap.
      * @param {string} containerId - The html id of the container that is going to contain the seatmap.
      */
-    this.createMap = function createMap(containerId) {
+    this.createMap = function createMap(containerId, flag=false) {
         // create seat map container
         var seatMapContainer = createContainer();
         // add header to container
@@ -1550,62 +1565,62 @@ function SeatchartJS(seatMap, seatTypes) { // eslint-disable-line no-unused-vars
         var container = document.getElementById(containerId);
         container.appendChild(seatMapContainer);
 
-        // set front indicator
-        var seat = document.getElementsByClassName('seatChart-seat')[0];
-        var width = seat.offsetWidth;
+      // set front indicator
+      var seat = document.getElementsByClassName('seatChart-seat')[0];
+      var width = seat.offsetWidth;
 
-        var computedStyle = getStyle(seat);
-        var margins = parseInt(computedStyle.marginLeft, 10) +
-                      parseInt(computedStyle.marginRight, 10);
+      var computedStyle = getStyle(seat);
+      var margins = parseInt(computedStyle.marginLeft, 10) +
+                    parseInt(computedStyle.marginRight, 10);
 
-        // set seatmap width
-        // +1 because of the row indexer
-        seatMapContainer.style.width = '{0}px'.format(((width + margins) * (seatMap.cols + 1)) +
-                                       margins);
+      // set seatmap width
+      // +1 because of the row indexer
+      seatMapContainer.style.width = '{0}px'.format(((width + margins) * (seatMap.cols + 1 - seatMap.startcol)) +
+                                     margins);
 
-        var front = seatMapContainer.getElementsByClassName('seatChart-front')[0];
-        front.style.width = '{0}px'.format(((width + margins) * seatMap.cols) - margins);
+      var front = seatMapContainer.getElementsByClassName('seatChart-front')[0];
+      front.style.width = '{0}px'.format(((width + margins) * (seatMap.cols - seatMap.startcol)) - margins);
 
-        // add disabled columns to disabled array
-        if (seatMap.disabledCols) {
-            for (var k = 0; k < seatMap.disabledCols.length; k += 1) {
-                var disabledColumn = seatMap.disabledCols[k];
-                for (var r = 0; r < seatMap.rows; r += 1) {
-                    seatMap.disabled.push((seatMap.cols * r) + disabledColumn);
-                }
+      // add disabled columns to disabled array
+      if (seatMap.disabledCols) {
+        for (var k = 0; k < seatMap.disabledCols.length; k += 1) {
+          var disabledColumn = seatMap.disabledCols[k];
+            for (var r = 0; r < seatMap.rows; r += 1) {
+              seatMap.disabled.push((seatMap.cols * r) + disabledColumn);
             }
         }
+      }
 
-        // add disabled rows to disabled array
-        if (seatMap.disabledRows) {
-            for (var m = 0; m < seatMap.disabledRows.length; m += 1) {
-                var disabledRow = seatMap.disabledRows[m];
-                for (var c = 0; c < seatMap.cols; c += 1) {
-                    seatMap.disabled.push((seatMap.cols * disabledRow) + c);
-                }
+      // add disabled rows to disabled array
+      if (seatMap.disabledRows) {
+        for (var m = 0; m < seatMap.disabledRows.length; m += 1) {
+          var disabledRow = seatMap.disabledRows[m];
+            for (var c = 0; c < seatMap.cols; c += 1) {
+              seatMap.disabled.push((seatMap.cols * disabledRow) + c);
             }
         }
+      }
 
-        setSeat('reserved');
-        setSeat('disabled');
-        preselectSeats();
+      setSeat('reserved');
+      setSeat('disabled');
+      preselectSeats(flag);
     };
 
   /**
    * Update the seatmap.
    * @param {string} containerId - The html id of the container that is going to contain the seatmap.
    */
-  this.updateseatMap = function updateseatMap(containerId, updatedseatMap) {
+  this.updateseatMap = function updateseatMap(containerId, updatedseatMap, flag=false) {
     var container = document.getElementById(containerId);
     var seatMapContainer = container.firstChild;
     container.removeChild(seatMapContainer);
-    updateTypesIndex(updatedseatMap);
+    updateTypesIndex(updatedseatMap, flag);
     seatMap = updatedseatMap;
     seatMap.rows = updatedseatMap.rows;
     seatMap.cols = updatedseatMap.cols;
     seatMap.startrow = updatedseatMap.startrow;
     seatMap.startcol = updatedseatMap.startcol;
-    this.createMap(containerId);
+    this.createMap(containerId, flag);
   };
 
   this.updateSeatCategories = function updateSeatCategories(containerId, updatedseatCategories) {
@@ -1620,7 +1635,7 @@ function SeatchartJS(seatMap, seatTypes) { // eslint-disable-line no-unused-vars
    * Update types index based on the new seatMap size
    * @param updatedseatMap new seatMap size
    */
-  var updateTypesIndex = function updateTypesIndex(updatedseatMap) {
+  var updateTypesIndex = function updateTypesIndex(updatedseatMap, flag) {
     var col = updatedseatMap.cols - seatMap.cols;
     if(col != 0) {
       for (var i = 0; i < seatTypes.length; i += 1) {
@@ -1631,9 +1646,9 @@ function SeatchartJS(seatMap, seatTypes) { // eslint-disable-line no-unused-vars
             var row = Math.floor(index / seatMap.cols);
             var column = index % seatMap.cols;
             var newindex = index + (row * col);
-            seatType.selected[j] = newindex;
+            if(flag)seatType.selected[j] = newindex;
             var newrow = Math.floor(newindex / updatedseatMap.cols);
-            if(newrow > row) {
+            if(newrow > row && flag) {
               seatType.selected.splice(j, 1);
               j--;
             }
