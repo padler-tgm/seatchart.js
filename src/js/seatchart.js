@@ -1198,7 +1198,7 @@ function SeatchartJS(seatMap, seatTypes) { // eslint-disable-line no-unused-vars
       if(selected != undefined) {
         for (var i = 0; i < selected.length; i++) {
           var seat = selected[i];
-          seat["free"]: true;
+          seat["free"] = true;
           if(seatMap.sectorId == seat.sectorId)
             seatType.selected.push(seatMap.columns * (seat.row - 1) + (seat.seat - 1));
         }
