@@ -782,7 +782,6 @@ function SeatchartJS(seatMap, seatTypes) { // eslint-disable-line no-unused-vars
         var scItem;
         //type.capitalizeFirstLetter()
         var description = '{0} - {1} {2}{3}\n'.format(seatName, type, price, self.currency);
-
         updateShoppingCartObject();
 
         if (action === 'remove') {
@@ -875,15 +874,14 @@ function SeatchartJS(seatMap, seatTypes) { // eslint-disable-line no-unused-vars
 
                 if (currentClass !== 'seatChart-seat' && currentClass !== 'clicked') {
                     // find index of current
-                    var index = types.indexOf(currentClass);
+                    var index = types.indexOf(currentClass.replace("*"," "));
                     // if the current class matches a type
                     // then select the new one
                     if (index !== -1) {
                         // a 'selectable' seat is clicked then play the click sound
                         playAsyncClick();
+                        this.classList.remove(types[index].replace(" ","*"));
                         do {
-
-                          this.classList.remove(types[index]);
                           index += 1;
 
                           if (index === types.length) {
@@ -902,9 +900,10 @@ function SeatchartJS(seatMap, seatTypes) { // eslint-disable-line no-unused-vars
                             }
                           }
                           if (flag) {
-
                             this.style.backgroundColor = '';
+                            newClass = newClass.replace(" ", "*");
                             this.classList.add(newClass);
+                            newClass = newClass.replace("*", " ");
                             if (currentClass == 'available') {
                               var icon = document.createElement("img");
                               var att = document.createAttribute("src");
@@ -941,16 +940,16 @@ function SeatchartJS(seatMap, seatTypes) { // eslint-disable-line no-unused-vars
                             // this has to be done after updating the shopping cart
                             // so the event is fired just once the seat style is really updated
                             if (currentClass === 'available') {
-                              if (addToScDict(this.id, newClass)) {
-                                updateShoppingCart('add', this.id, newClass, currentClass, true);
+                              if (addToScDict(this.id, newClass.replace("*"," "))) {
+                                updateShoppingCart('add', this.id, newClass.replace("*"," "), currentClass.replace("*"," "), true);
                               }
                             } else if (newClass === 'available') {
-                              if (removeFromScDict(this.id, currentClass)) {
-                                updateShoppingCart('remove', this.id, newClass, currentClass, true);
+                              if (removeFromScDict(this.id, currentClass.replace("*"," "))) {
+                                updateShoppingCart('remove', this.id, newClass.replace("*"," "), currentClass.replace("*"," "), true);
                               }
-                            } else if (addToScDict(this.id, newClass) &&
+                            } else if (addToScDict(this.id, newClass.replace("*"," ")) &&
                               removeFromScDict(this.id, currentClass)) {
-                              updateShoppingCart('update', this.id, newClass, currentClass, true);
+                              updateShoppingCart('update', this.id, newClass.replace("*"," "), currentClass.replace("*"," "), true);
                             }
                           }
                         }while(!flag);
@@ -1229,7 +1228,7 @@ function SeatchartJS(seatMap, seatTypes) { // eslint-disable-line no-unused-vars
         for (var n = 0; n < seatTypes.length; n += 1) {
             var seatType = seatTypes[n];
             if ({}.hasOwnProperty.call(seatType, 'selected') && seatType.selected) {
-                var type = seatType.type;
+                var type = seatType.type.replace(" ","*");
                 var color = seatType.color;
 
                 for (var l = 0; l < seatType.selected.length; l += 1) {
