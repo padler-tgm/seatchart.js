@@ -32,6 +32,6 @@
     "stylelint": "^9.10.1",
     "stylelint-config-standard": "^18.2.0"
   },
-  "version": "1.4.0",
+  "version": "1.5.0",
   "dependencies": {}
 }
